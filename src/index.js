@@ -1,5 +1,6 @@
 import './css/styles.css';
 import { fetchCountries } from './fetchCountries.js';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 const debounce = require('lodash.debounce');
 const DEBOUNCE_DELAY = 300;
 const refs = {
@@ -18,30 +19,43 @@ function onInputChange() {
   }
   fetchCountries(refs.searchBox.value.trim())
     .then(data => {
-      if (data === undefined) {
-        return console.log('Oops, there is no country with that name');
-      }
       if (data.length === 1) {
-        console.log('1 country');
-        // markupOne()
+        return markupOne(data[0]);
       } else if (data.length <= 10) {
-        console.log('1-9 country');
-        console.log(data);
-        markupSeveral(data);
+        return markupSeveral(data);
       } else if (data.length > 10) {
-        console.log(
-          'Too many matches found. Please enter a more specific name.'
+        Notify.info(
+          'Too many matches found. Please enter a more specific name.',
+          { position: 'center-top' }
         );
       }
     })
-    .catch(e => console.log(e));
+    .catch(e => {
+      Notify.failure('Oops, there is no country with that name', {
+        position: 'center-top',
+      });
+      console.log(e);
+    })
+    .finally(clearResultsInfo());
 }
 function markupSeveral(data) {
   data.map(country => {
     const { flags, name } = country;
     const countryItem = document.createElement('li');
-    countryItem.classList.add('.country');
-    countryItem.innerHTML = `<img src='${flags.svg}' alt='flag of ${name.official}' width='60'>${name.official}`;
+    countryItem.classList.add('country');
+    countryItem.innerHTML = `<img src='${flags.svg}' alt='flag of ${name.official}' width='30'>${name.official}`;
     refs.countryList.appendChild(countryItem);
   });
+}
+function markupOne(country) {
+  const { flags, capital, name, population } = country;
+  const languages = Object.values(country.languages).join(',');
+  refs.countryInfo.innerHTML = `<img src='${flags.svg}' alt='flag of ${name.official}' width='30'><span class="country-title">${name.official}</span>
+   <p><b>Capital:</b> ${capital}</p>
+    <p><b>Population:</b> ${population}</p>
+    <p><b>Languages:</b> ${languages}</p>`;
+}
+function clearResultsInfo() {
+  refs.countryList.innerHTML = '';
+  refs.countryInfo.innerHTML = '';
 }
