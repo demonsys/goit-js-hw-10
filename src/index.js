@@ -15,7 +15,7 @@ refs.searchBox.addEventListener(
 );
 function onInputChange() {
   if (refs.searchBox.value.trim() === '') {
-    return;
+    return clearResultsInfo();
   }
   fetchCountries(refs.searchBox.value.trim())
     .then(data => {
